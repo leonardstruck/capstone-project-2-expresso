@@ -50,10 +50,12 @@ menurouter.get('/', (req, res) => {
 });
 
 menurouter.get('/:id', checkIfMenuExists, (req, res) => {
-  db.get('SELECT * FROM Menu WHERE id = $id', {$id: req.params.id}, (err, row) => {
-    if(!err) {
-      res.status(200).send({menu: row});
-    }
+  sendBackItem(res, 'Menu', req.params.id, 200);
+});
+
+menurouter.get('/:id/menu-items', checkIfMenuExists, (req, res) => {
+  db.all('SELECT * FROM MenuItem WHERE menu_id = $id', {$id: req.params.id}, (err, rows) => {
+    res.status(200).send({menuItems: rows});
   });
 });
 
