@@ -32,6 +32,16 @@ var sendBackItem = function(res, table, id, resstatus) {
   });
 }
 
+var checkIfMenuHasRelatedItems = function(req, res, next) {
+  db.all('SELECT * FROM MenuItem WHERE menu_id = $id', {$id: req.params.id}, (err, rows) => {
+    if(rows.length == 0) {
+      next();
+    } else {
+      res.status(400).send();
+    }
+  });
+};
+
 //GET ROUTES
 menurouter.get('/', (req, res) => {
   db.all('SELECT * FROM Menu', (err, rows) => {
@@ -63,6 +73,15 @@ menurouter.put('/:id', checkIfValidMenu, (req, res) => {
       sendBackItem(res, 'Menu', req.params.id, 200);
     }
   });
+});
+
+//DELETE ROUTES
+menurouter.delete('/:id', checkIfMenuHasRelatedItems, (req,res) => {
+  db.run('DELETE FROM Menu WHERE id = $id', {$id: req.params.id}, (err) => {
+    if(!err) {
+      res.status(204).send();
+    }
+  })
 });
 
 module.exports = menurouter;
