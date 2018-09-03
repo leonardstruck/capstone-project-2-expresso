@@ -50,10 +50,17 @@ employeerouter.post('/', checkIfValidValues, (req, res) => {
 
 //PUT ROUTES
 employeerouter.put('/:id', checkIfIdExists, checkIfValidValues, (req,res) => {
-  db.run('UPDATE Employee SET name = $name, position = $position, wage = $wage', {$name: req.body.employee.name, $position: req.body.employee.position, $wage: req.body.employee.wage}, function (err) {
+  db.run('UPDATE Employee SET name = $name, position = $position, wage = $wage WHERE id = $id', {$name: req.body.employee.name, $position: req.body.employee.position, $wage: req.body.employee.wage, $id: req.params.id}, function (err) {
     if(!err) {
       sendBackEmployee(res, req.params.id, 200);
     }
+  });
+});
+
+//DELETE ROUTES
+employeerouter.delete('/:id', checkIfIdExists, (req, res) => {
+  db.run('UPDATE Employee SET is_current_employee = 0 WHERE id = $id', {$id: req.params.id}, function (err) {
+    sendBackEmployee(res, req.params.id, 200);
   });
 });
 
