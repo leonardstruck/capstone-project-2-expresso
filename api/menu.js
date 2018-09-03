@@ -22,12 +22,20 @@ var checkIfValidMenu = function(req, res, next) {
   }
 }
 
+var checkIfValidMenuItem = function(req, res, next) {
+  if(req.body.menuItem.name && req.body.menuItem.description && req.body.menuItem.inventory && req.body.menuItem.price) {
+    next();
+  } else {
+    res.status(400).send();
+  }
+}
+
 var sendBackItem = function(res, table, id, resstatus) {
   db.get('SELECT * FROM ' + table + ' WHERE id = $id', {$id: id}, (err, row) => {
     if(table == "Menu") {
       res.status(resstatus).send({menu: row});
-    } else if (table == "Timesheet") {
-      res.status(resstatus).send({timesheet: row});
+    } else if (table == "MenuItem") {
+      res.status(resstatus).send({menuItem: row});
     }
   });
 }
@@ -64,6 +72,14 @@ menurouter.post('/', checkIfValidMenu, (req, res) => {
   db.run('INSERT INTO Menu (title) VALUES ($title)', {$title: req.body.menu.title}, function (err) {
     if(!err) {
       sendBackItem(res, 'Menu', this.lastID, 201);
+    }
+  });
+});
+
+menurouter.post('/:id/menu-items', checkIfValidMenuItem, (req, res) => {
+  db.run('INSERT INTO MenuItem (name, description, inventory, price, menu_id) VALUES ($name, $description, $inventory, $price, $menu_id)', {$name: req.body.menuItem.name, $description: req.body.menuItem.description, $inventory: req.body.menuItem.inventory, $price: req.body.menuItem.price, $menu_id: req.params.id}, function (err) {
+    if(!err) {
+      sendBackItem(res, 'MenuItem', this.lastID, 201);
     }
   });
 });
