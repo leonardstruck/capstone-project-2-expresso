@@ -2,3 +2,4 @@ node_modules/
 build/
 test/test.sqlite
 database.sqlite
+database.sqlite
