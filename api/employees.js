@@ -14,6 +14,16 @@ var checkIfEmployeeExists = function(req, res, next) {
   });
 }
 
+var checkIfTimeSheetExists = function(req, res, next) {
+  db.all('SELECT * FROM Timesheet WHERE id = $id', {$id: req.params.timesheetId}, (err, rows) => {
+    if (rows.length == 0) {
+      res.status(404).send();
+    } else {
+      next();
+    }
+  });
+}
+
 var checkIfValidEmployee = function(req, res, next) {
   if(req.body.employee.name && req.body.employee.position && req.body.employee.wage ) {
     next();
@@ -79,6 +89,14 @@ employeerouter.put('/:id', checkIfEmployeeExists, checkIfValidEmployee, (req,res
   db.run('UPDATE Employee SET name = $name, position = $position, wage = $wage WHERE id = $id', {$name: req.body.employee.name, $position: req.body.employee.position, $wage: req.body.employee.wage, $id: req.params.id}, function (err) {
     if(!err) {
       sendBackItem(res, 'Employee', req.params.id, 200);
+    }
+  });
+});
+
+employeerouter.put('/:id/timesheets/:timesheetId', checkIfTimeSheetExists, checkIfValidTimesheet, checkIfEmployeeExists, (req, res) => {
+  db.run('UPDATE Timesheet SET hours = $hours, rate = $rate, date = $date, employee_id = $employee_id WHERE id = $id', {$hours: req.body.timesheet.hours, $rate: req.body.timesheet.rate, $date: req.body.timesheet.date, $employee_id: req.params.id, $id: req.params.timesheetId}, function (err) {
+    if(!err) {
+      sendBackItem(res, 'Timesheet', req.params.timesheetId, 200);
     }
   });
 });
