@@ -108,4 +108,10 @@ employeerouter.delete('/:id', checkIfEmployeeExists, (req, res) => {
   });
 });
 
+employeerouter.delete('/:id/timesheets/:timesheetId', checkIfTimeSheetExists, (req, res) => {
+  db.run('DELETE FROM Timesheet WHERE id = $id', {$id: req.params.timesheetId}, (err) => {
+    res.status(204).send();
+  });
+});
+
 module.exports = employeerouter;
