@@ -4,7 +4,7 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
 //MIDDLEWARE
-var checkIfIdExists = function(req, res, next) {
+var checkIfEmployeeExists = function(req, res, next) {
   db.all('SELECT * FROM Employee WHERE id = $id', {$id: req.params.id}, (err, rows) => {
     if (rows.length == 0) {
       res.status(404).send();
@@ -35,8 +35,14 @@ employeerouter.get('/', (req, res) => {
   });
 });
 
-employeerouter.get('/:id', checkIfIdExists, (req, res) => {
+employeerouter.get('/:id', checkIfEmployeeExists, (req, res) => {
   sendBackEmployee(res, req.params.id, 200);
+});
+
+employeerouter.get('/:id/timesheets', checkIfEmployeeExists, (req,res) => {
+  db.all('SELECT * FROM Timesheet WHERE employee_id = $id', {$id: req.params.id}, (err, rows) => {
+    res.status(200).send({timesheets: rows});
+  });
 });
 
 //POST ROUTES
@@ -49,7 +55,7 @@ employeerouter.post('/', checkIfValidValues, (req, res) => {
 });
 
 //PUT ROUTES
-employeerouter.put('/:id', checkIfIdExists, checkIfValidValues, (req,res) => {
+employeerouter.put('/:id', checkIfEmployeeExists, checkIfValidValues, (req,res) => {
   db.run('UPDATE Employee SET name = $name, position = $position, wage = $wage WHERE id = $id', {$name: req.body.employee.name, $position: req.body.employee.position, $wage: req.body.employee.wage, $id: req.params.id}, function (err) {
     if(!err) {
       sendBackEmployee(res, req.params.id, 200);
@@ -58,7 +64,7 @@ employeerouter.put('/:id', checkIfIdExists, checkIfValidValues, (req,res) => {
 });
 
 //DELETE ROUTES
-employeerouter.delete('/:id', checkIfIdExists, (req, res) => {
+employeerouter.delete('/:id', checkIfEmployeeExists, (req, res) => {
   db.run('UPDATE Employee SET is_current_employee = 0 WHERE id = $id', {$id: req.params.id}, function (err) {
     sendBackEmployee(res, req.params.id, 200);
   });
