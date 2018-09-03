@@ -121,4 +121,12 @@ menurouter.delete('/:id', checkIfMenuHasRelatedItems, (req,res) => {
   })
 });
 
+menurouter.delete('/:id/menu-items/:menuItemId', checkIfMenuItemExists, (req, res) => {
+  db.run('DELETE FROM MenuItem WHERE id = $id', {$id: req.params.menuItemId}, (err) => {
+    if(!err) {
+      res.status(204).send();
+    }
+  })
+});
+
 module.exports = menurouter;
