@@ -56,4 +56,13 @@ menurouter.post('/', checkIfValidMenu, (req, res) => {
   });
 });
 
+//PUT ROUTES
+menurouter.put('/:id', checkIfValidMenu, (req, res) => {
+  db.run('UPDATE Menu SET title = $title WHERE id = $id', {$title: req.body.menu.title, $id: req.params.id}, function (err) {
+    if(!err) {
+      sendBackItem(res, 'Menu', req.params.id, 200);
+    }
+  });
+});
+
 module.exports = menurouter;
