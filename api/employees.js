@@ -14,7 +14,7 @@ var checkIfEmployeeExists = function(req, res, next) {
   });
 }
 
-var checkIfValidValues = function(req, res, next) {
+var checkIfValidEmployee = function(req, res, next) {
   if(req.body.employee.name && req.body.employee.position && req.body.employee.wage ) {
     next();
   } else {
@@ -22,9 +22,21 @@ var checkIfValidValues = function(req, res, next) {
   }
 }
 
-var sendBackEmployee = function(res, id, resstatus) {
-  db.get('SELECT * FROM Employee WHERE id = $id', {$id: id}, (err, row) => {
-    res.status(resstatus).send({employee: row});
+var checkIfValidTimesheet = function(req, res, next) {
+  if (req.body.timesheet.hours && req.body.timesheet.rate && req.body.timesheet.date && req.params.id) {
+    next();
+  } else {
+    res.status(400).send();
+  }
+}
+
+var sendBackItem = function(res, table, id, resstatus) {
+  db.get('SELECT * FROM ' + table + ' WHERE id = $id', {$id: id}, (err, row) => {
+    if(table == "Employee") {
+      res.status(resstatus).send({employee: row});
+    } else if (table == "Timesheet") {
+      res.status(resstatus).send({timesheet: row});
+    }
   });
 }
 
@@ -36,7 +48,7 @@ employeerouter.get('/', (req, res) => {
 });
 
 employeerouter.get('/:id', checkIfEmployeeExists, (req, res) => {
-  sendBackEmployee(res, req.params.id, 200);
+  sendBackItem(res, 'Employee', req.params.id, 200);
 });
 
 employeerouter.get('/:id/timesheets', checkIfEmployeeExists, (req,res) => {
@@ -46,19 +58,27 @@ employeerouter.get('/:id/timesheets', checkIfEmployeeExists, (req,res) => {
 });
 
 //POST ROUTES
-employeerouter.post('/', checkIfValidValues, (req, res) => {
+employeerouter.post('/', checkIfValidEmployee, (req, res) => {
   db.run('INSERT INTO Employee (name, position, wage, is_current_employee) VALUES ($name, $position, $wage, 1)', {$name: req.body.employee.name, $position: req.body.employee.position, $wage: req.body.employee.wage}, function (err) {
     if(!err) {
-      sendBackEmployee(res, this.lastID, 201);
+      sendBackItem(res, 'Employee', this.lastID, 201);
     }
   });
 });
 
+employeerouter.post('/:id/timesheets', checkIfValidTimesheet, checkIfEmployeeExists, (req, res) => {
+  db.run('INSERT INTO Timesheet (hours, rate, date, employee_id) VALUES ($hours, $rate, $date, $employee_id)', {$hours: req.body.timesheet.hours, $rate: req.body.timesheet.rate, $date: req.body.timesheet.date, $employee_id: req.params.id}, function (err) {
+    if(!err) {
+      sendBackItem(res, 'Timesheet', this.lastID, 201);
+    }
+  })
+})
+
 //PUT ROUTES
-employeerouter.put('/:id', checkIfEmployeeExists, checkIfValidValues, (req,res) => {
+employeerouter.put('/:id', checkIfEmployeeExists, checkIfValidEmployee, (req,res) => {
   db.run('UPDATE Employee SET name = $name, position = $position, wage = $wage WHERE id = $id', {$name: req.body.employee.name, $position: req.body.employee.position, $wage: req.body.employee.wage, $id: req.params.id}, function (err) {
     if(!err) {
-      sendBackEmployee(res, req.params.id, 200);
+      sendBackItem(res, 'Employee', req.params.id, 200);
     }
   });
 });
@@ -66,7 +86,7 @@ employeerouter.put('/:id', checkIfEmployeeExists, checkIfValidValues, (req,res) 
 //DELETE ROUTES
 employeerouter.delete('/:id', checkIfEmployeeExists, (req, res) => {
   db.run('UPDATE Employee SET is_current_employee = 0 WHERE id = $id', {$id: req.params.id}, function (err) {
-    sendBackEmployee(res, req.params.id, 200);
+    sendBackItem(res, 'Employee', req.params.id, 200);
   });
 });
 
