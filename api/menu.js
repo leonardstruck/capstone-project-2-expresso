@@ -14,6 +14,17 @@ var checkIfMenuExists = function(req, res, next) {
   });
 }
 
+var checkIfMenuItemExists = function(req, res, next) {
+  db.all('SELECT * FROM MenuItem WHERE id = $id', {$id: req.params.menuItemId}, (err, rows) => {
+    if(rows.length == 0) {
+      res.status(404).send();
+    } else {
+      next();
+    }
+  })
+}
+
+
 var checkIfValidMenu = function(req, res, next) {
   if(req.body.menu.title) {
     next();
@@ -89,6 +100,14 @@ menurouter.put('/:id', checkIfValidMenu, (req, res) => {
   db.run('UPDATE Menu SET title = $title WHERE id = $id', {$title: req.body.menu.title, $id: req.params.id}, function (err) {
     if(!err) {
       sendBackItem(res, 'Menu', req.params.id, 200);
+    }
+  });
+});
+
+menurouter.put('/:id/menu-items/:menuItemId', checkIfMenuItemExists, checkIfValidMenuItem, (req, res) => {
+  db.run('UPDATE MenuItem SET name = $name, description = $description, inventory = $inventory, price = $price, menu_id = $menu_id', {$name: req.body.menuItem.name, $description: req.body.menuItem.description, $inventory: req.body.menuItem.inventory, $price: req.body.menuItem.price, $menu_id: req.params.id}, function(err) {
+    if(!err) {
+      sendBackItem(res, 'MenuItem', req.params.menuItemId, 200);
     }
   });
 });
