@@ -8,9 +8,11 @@ app.use(bodyParser.json());
 
 //ROUTERS
 const employeerouter = require('./api/employees.js');
+const menurouter = require('./api/menu.js');
 
 
 app.use('/api/employees', employeerouter);
+app.use('/api/menus', menurouter);
 
 app.listen(PORT, () => { console.log("Listening to Port " + PORT); });
 
